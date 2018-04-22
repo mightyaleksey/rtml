@@ -9,6 +9,7 @@
     "react-dom": "16"
   },
   "dependencies": {
+    "babel-register": "^6.26.0",
     "cheerio": "^1.0.0-rc.2",
     "chokidar": "^2.0.3",
     "fast-glob": "^2.2.0",

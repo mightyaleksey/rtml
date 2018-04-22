@@ -5,6 +5,7 @@ const ReactDOMServer = require('react-dom/server');
 
 const doctype = '<!doctype html>';
 
+require('babel-register');
 module.exports = render;
 
 function loadComponent(filepath) {
