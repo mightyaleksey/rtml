@@ -1,0 +1,22 @@
+{
+  "name": "rtml",
+  "version": "1.0.0",
+  "bin": {
+    "rtml": "./src/bin.js"
+  },
+  "peerDependencies": {
+    "react": "16",
+    "react-dom": "16"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "chokidar": "^2.0.3",
+    "fast-glob": "^2.2.0",
+    "minimist": "^1.2.0"
+  },
+  "devDependencies": {
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "styled-components": "^3.2.6"
+  }
+}
