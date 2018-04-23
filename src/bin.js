@@ -5,26 +5,28 @@ const {name, version} = require('../package');
 process.title = name;
 
 const USAGE = `
-  Usage: rtml <file> [OPTIONS]
+  $ rtml <file,glob> [options]
 
   Options:
 
     -d, --dir      change output dir
     -h, --help     print usage
-    -s, --styled   inject css generated via styled-components
+    -s, --styled   inject generated css via styled-components into html
     -v, --version  print version
     -w, --watch    use watch mode
 
   Examples:
 
-    rtml src/pages/index.js
-    rtml src/pages/*.js -d dist -w
+    Transform React Component into index.html
+    $ rtml src/pages/index.js
+
+    Watch for changes and update resulting html files
+    $ rtml src/pages/*.js -d dist -w
 `;
 
 const NOCOMMAND = `
   Provide any file:
-
-    rtml src/pages/index.js
+    $ rtml <file>
 `;
 
 const minimist = require('minimist');
