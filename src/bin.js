@@ -67,10 +67,13 @@ if (argv._.length === 0) {
 
 const fg = require('fast-glob');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 const path = require('path');
 const render = require('./render');
 
 const dirname = path.resolve(argv.dir);
+mkdirp.sync(dirname);
+
 const stream = fg.stream(argv._, { absolute: true });
 
 stream.on('data', task);
@@ -83,9 +86,13 @@ stream.once('end', () => {
       cwd: process.cwd(),
     });
 
-    watcher.on('change', task);
+    watcher.on('change', chokidarTask);
   }
 });
+
+function chokidarTask(file) {
+  return task(path.resolve(file));
+}
 
 function task(filepath) {
   const destpath = htmlpath(filepath, dirname);
@@ -96,7 +103,7 @@ function task(filepath) {
 
 function htmlpath(filepath, dir) {
   const filename = path.basename(filepath);
-  const htmlname = filename.replace(/\.\w+$/, '') + '.html';
+  const htmlname = (filename.replace(/\.\w+$/, '') + '.html').toLowerCase();
   return path.join(dir, htmlname);
 }
 

@@ -11,6 +11,7 @@ module.exports = render;
 function loadComponent(filepath) {
   return new Promise((resolve, reject) => {
     try {
+      delete require.cache[filepath]; // invalidate module cache
       const Component = require(filepath);
       resolve(typeof Component.default === 'function'
         ? Component.default
