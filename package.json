@@ -1,6 +1,7 @@
 {
   "name": "rtml",
   "version": "1.0.0",
+  "description": "Render React components into html from CLI",
   "bin": {
     "rtml": "./src/bin.js"
   },
@@ -20,5 +21,16 @@
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
     "styled-components": "^3.2.6"
-  }
+  },
+  "keywords": [
+    "react",
+    "react-dom",
+    "cli"
+  ],
+  "author": "Alexey Litvinov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sullenor/rtml/issues"
+  },
+  "homepage": "https://github.com/sullenor/rtml#readme"
 }
