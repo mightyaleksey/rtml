@@ -69,6 +69,7 @@ if (argv._.length === 0) {
 
 const fg = require('fast-glob');
 const fs = require('fs');
+const logError = require('./logError');
 const mkdirp = require('mkdirp');
 const path = require('path');
 const render = require('./render');
@@ -79,7 +80,7 @@ mkdirp.sync(dirname);
 const stream = fg.stream(argv._, { absolute: true });
 
 stream.on('data', task);
-stream.once('error', console.error);
+stream.once('error', logError);
 stream.once('end', () => {
   if (argv.watch) {
     const chokidar = require('chokidar');
@@ -100,7 +101,7 @@ function task(filepath) {
   const destpath = htmlpath(filepath, dirname);
   return render(filepath, argv.styled)
     .then(html => write(destpath, html))
-    .catch(error => console.error(error));
+    .catch(logError);
 }
 
 function htmlpath(filepath, dir) {
