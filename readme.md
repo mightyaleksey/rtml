@@ -7,7 +7,7 @@ The main idea is to provide a convenient wrapper for `ReactDOMServer.renderToSta
 
 ## Usage
 
-```bash
+```
   $ rtml <file,glob> [options]
 
   Options:
