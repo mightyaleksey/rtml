@@ -9,11 +9,11 @@ const USAGE = `
 
   Options:
 
-    -d, --dir      change output dir
-    -h, --help     print usage
-    -s, --styled   inject generated css via styled-components into html
-    -v, --version  print version
-    -w, --watch    use watch mode
+    -d, --dir <path>  change output dir
+    -h, --help        print usage
+    -s, --styled      inject generated css via styled-components into html
+    -v, --version     print version
+    -w, --watch       use watch mode
 
   Examples:
 
@@ -67,42 +67,74 @@ if (argv._.length === 0) {
   process.exit();
 }
 
-const fg = require('fast-glob');
-const fs = require('fs');
-const logError = require('./logError');
-const mkdirp = require('mkdirp');
 const path = require('path');
-const render = require('./render');
-
+const mkdirp = require('mkdirp');
 const dirname = path.resolve(argv.dir);
 mkdirp.sync(dirname);
 
+const fg = require('fast-glob');
 const stream = fg.stream(argv._, { absolute: true });
 
-stream.on('data', task);
+const logError = require('./logError');
 stream.once('error', logError);
-stream.once('end', () => {
-  if (argv.watch) {
-    const chokidar = require('chokidar');
-    const watcher = chokidar.watch(argv._, {
-      persistent: true,
-      cwd: process.cwd(),
-    });
 
-    watcher.on('change', chokidarTask);
-  }
+const fs = require('fs');
+const Graph = require('./graph');
+const { dropCache, getModuleDeps, loadComponent, render } = require('./render');
+const graph = new Graph();
+const tasks = [];
+stream.on('data', pagepath => {
+  const task = loadComponent(pagepath)
+    .then(Component => {
+      const deps = getModuleDeps(pagepath);
+      graph.addDeps(pagepath, deps);
+
+      const destpath = htmlpath(pagepath, dirname);
+      const html = render(Component, argv.styled);
+      return write(destpath, html);
+    })
+    .catch(logError);
+
+  tasks.push(task);
 });
 
-function chokidarTask(file) {
-  return task(path.resolve(file));
-}
+tasks.push(new Promise(resolve => stream.once('end', resolve)));
 
-function task(filepath) {
-  const destpath = htmlpath(filepath, dirname);
-  return render(filepath, argv.styled)
-    .then(html => write(destpath, html))
-    .catch(logError);
-}
+Promise.all(tasks)
+  .then(() => {
+    if (argv.watch) {
+      const files = argv._.concat(graph.deps());
+
+      const chokidar = require('chokidar');
+      const watcher = chokidar.watch(files, {
+        persistent: true,
+        cwd: process.cwd(),
+      });
+
+      watcher.on('unlink', dep => {
+        const deppath = path.resolve(dep);
+        graph.removeDeps(deppath);
+      });
+
+      watcher.on('change', dep => {
+        const deppath = path.resolve(dep);
+        graph.forPage(deppath, pagepath => {
+          const deps = getModuleDeps(pagepath);
+          graph.addDeps(pagepath, deps);
+          dropCache(deps);
+
+          loadComponent(pagepath)
+            .then(Component => {
+              const destpath = htmlpath(pagepath, dirname);
+              const html = render(Component, argv.styled);
+              console.log(html)
+              return write(destpath, html);
+            })
+            .catch(logError);
+        });
+      });
+    }
+  });
 
 function htmlpath(filepath, dir) {
   const filename = path.basename(filepath);
@@ -112,12 +144,14 @@ function htmlpath(filepath, dir) {
 
 function write(filepath, data) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(filepath, data, 'utf8', error => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(filepath);
-      }
-    });
+    fs.writeFile(
+      filepath,
+      data,
+      {
+        encoding: 'utf8',
+        flag: 'w',
+      },
+      error => error ? reject(error) : resolve(filepath)
+    );
   });
 }
