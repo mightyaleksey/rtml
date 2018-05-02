@@ -1,6 +1,6 @@
 {
   "name": "rtml",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Render React components into html from CLI",
   "bin": {
     "rtml": "./src/bin.js"

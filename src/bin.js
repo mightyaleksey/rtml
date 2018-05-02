@@ -127,7 +127,6 @@ Promise.all(tasks)
             .then(Component => {
               const destpath = htmlpath(pagepath, dirname);
               const html = render(Component, argv.styled);
-              console.log(html)
               return write(destpath, html);
             })
             .catch(logError);
