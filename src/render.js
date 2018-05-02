@@ -2,6 +2,9 @@
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
+const path = require('path');
 
 const doctype = '<!doctype html>';
 
@@ -9,8 +12,10 @@ require('babel-register');
 module.exports = {
   dropCache,
   getModuleDeps,
+  htmlname,
   loadComponent,
   render,
+  write,
 };
 
 function dropCache(files) {
@@ -35,25 +40,25 @@ function getModuleDeps(abspath) {
   return Object.keys(visited);
 }
 
+function htmlname(abspath, dirname) {
+  const file = path.basename(abspath);
+  const newfile = (file.replace(/\.\w+$/, '') + '.html').toLowerCase();
+  return path.join(dirname, newfile);
+}
+
 function loadComponent(abspath) {
   return new Promise((resolve, reject) => {
     try {
-      const page = require(abspath);
-      const Component = typeof page.default === 'function'
-        ? page.default
-        : page;
+      const mod = require(abspath);
+      const fn = typeof mod.default === 'function'
+        ? mod.default
+        : mod;
 
-      resolve(Component);
+      resolve(fn);
     } catch (error) {
       reject(error);
     }
   });
-}
-
-function render(Component, useSC) {
-  return useSC
-    ? renderStyledComponent(Component)
-    : renderComponent(Component);
 }
 
 function renderComponent(Component) {
@@ -75,4 +80,45 @@ function renderStyledComponent(Component) {
   $('head').append(styleTags);
 
   return `${doctype}${$.html()}`;
+}
+
+function render(Component, isStyledComponent) {
+  return isStyledComponent
+    ? renderStyledComponent(Component)
+    : renderComponent(Component);
+}
+
+function mkdir(directory) {
+  return new Promise((resolve, reject) => mkdirp(
+    directory,
+    error => error
+      ? reject(error)
+      : resolve(directory)
+  ));
+}
+
+function writeFile(abspath, data) {
+  return new Promise((resolve, reject) => fs.writeFile(
+    abspath,
+    data,
+    {
+      encoding: 'utf8',
+      flag: 'w',
+    },
+    error => error
+      ? reject(error)
+      : resolve(abspath)
+  ));
+}
+
+function write(abspath, data) {
+  return writeFile(abspath, data)
+    .catch(error => {
+      if (error.code === 'ENOENT') {
+        return mkdir(path.dirname(abspath))
+          .then(() => writeFile(abspath, data));
+      }
+
+      throw error;
+    });
 }
